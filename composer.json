@@ -1,0 +1,29 @@
+{
+    "name": "mageinic/hyva-shipping-progress-bar",
+    "description": "Hyva Shipping Progress Bar Extension By MageINIC, enhances your online store's performance by displaying a dynamic progress bar on all pages. Customize messages to inform customers of shipping policies, incentivize additional purchases for free shipping, and celebrate their achievements.",
+    "require": {
+        "php": "^8.0",
+        "mageinic/shipping-progress-bar": "1.0.*"
+    },
+    "type": "magento2-module",
+    "version": "1.0.0",
+    "license": [
+        "OSL-3.0",
+        "AFL-3.0"
+    ],
+    "authors": [
+        {
+            "name": "MageINIC",
+            "email": "support@mageinic.com",
+            "homepage": "https://www.mageinic.com"
+        }
+    ],
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Hyva\\MageINICShippingProgressBar\\": ""
+        }
+    }
+}

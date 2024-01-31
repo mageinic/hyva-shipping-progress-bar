@@ -1,0 +1,149 @@
+<?php
+/**
+ * MageINIC
+ * Copyright (C) 2023 MageINIC <support@mageinic.com>
+ *
+ * NOTICE OF LICENSE
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see https://opensource.org/licenses/gpl-3.0.html.
+ *
+ * Do not edit or add to this file if you wish to upgrade this extension to newer
+ * version in the future.
+ *
+ * @category MageINIC
+ * @package Hyva_MageINICShippingProgressBar
+ * @copyright Copyright (c) 2023 MageINIC (https://www.mageinic.com/)
+ * @license https://opensource.org/licenses/gpl-3.0.html GNU General Public License,version 3 (GPL-3.0)
+ * @author MageINIC <support@mageinic.com>
+ */
+
+declare(strict_types=1);
+
+use MageINIC\ShippingProgressBar\Block\Cart\Sidebar;
+use Magento\Framework\Escaper;
+
+/** @var Escaper $escaper */
+/** @var Sidebar $block */
+?>
+<?php if ($block->getCoreFreeShippingStatus()): ?>
+    <?php if ($block->getPriceForShippingProgressBar()): ?>
+        <?php
+        $initialMessage = $block->getInitialMessage();
+        $getFreeShippingAmount = [
+            '{{price}}' => $block->getCurrentCurrencySymbol() . $block->getPriceForShippingProgressBar(),
+        ];
+        ?>
+        <script>
+            window.getInitialMessage = "<?=  /* @noEscape */ __(strtr($initialMessage, $getFreeShippingAmount)); ?>";
+            window.getAchievedMessage = "<?=  /* @noEscape */ __($block->getAchievedMessage()); ?>";
+            window.inProgressMessage = "<?=  /* @noEscape */ __($block->inProgressMessage()); ?>";
+            window.maxpriceShipping = <?=  /* @noEscape */ $block->getPriceForShippingProgressBar() ?>;
+
+            function initProgressBar() {
+                return {
+                    initialMessage: window.getInitialMessage,
+                    storeCurrencySymbol: window.getStoreCurrencySymbol,
+                    achievedMessage: window.getAchievedMessage,
+                    progressMessage: window.inProgressMessage,
+                    priceShipping: window.maxpriceShipping,
+                    isLoading: false,
+                    cart: {},
+                    itemsCount: 0,
+                    subtotalAmount: 0,
+                    percentage: 0,
+                    totalAmount: 0,
+                    getData(data) {
+                        if (data.cart) {
+                            this.cart = data.cart;
+                            this.itemsCount = data.cart.items && data.cart.items.length || 0;
+                        }
+                        this.isLoading = false;
+                    },
+                    /**
+                     * @returns {string}
+                     */
+                    getItemsTotalAmount: function () {
+                        this.subtotalAmount = this.cart.subtotalAmount;
+                        this.totalAmount = this.priceShipping - this.subtotalAmount;
+                        let remainingAmount = hyva.formatPrice(this.totalAmount);
+                        return inProgressMessage.replace('{{price}}', remainingAmount);
+                    },
+
+                    /**
+                     * @returns {number}
+                     */
+                    getPercentage: function () {
+                        this.subtotalAmount = this.cart.subtotalAmount;
+                        if (this.subtotalAmount > this.priceShipping) {
+                            this.subtotalAmount = this.priceShipping;
+                        }
+                        this.getItemsTotalAmount();
+                        this.percentage = ((this.subtotalAmount * 100) / this.priceShipping);
+                        return this.percentage
+                    },
+
+                    /**
+                     * @returns {*}
+                     */
+                    getInitialMessage: function () {
+                        return this.initialMessage.replace('{{price}}', hyva.formatPrice(this.priceShipping, false));
+                    },
+
+                    /**
+                     * @returns {*}
+                     */
+                    getAchievedMessage: function () {
+                        return this.achievedMessage.replace('{{price}}', hyva.formatPrice(this.priceShipping, false));
+                    }
+                }
+            }
+        </script>
+        <section
+            x-cloak
+            x-show="cart"
+            x-data="initProgressBar()"
+            @private-content-loaded.window="getData($event.detail.data)"
+            class="bg-yellow"
+        >
+            <div id="" class="" x-cloak>
+                <div id="hidden lg:block lg:relative lg:min-h-0 lg:px-8 lg:w-auto lg:pt-0" class="block">
+                    <template x-if="!itemsCount">
+                        <div class="flex items-center justify-center w-full bg-[#1979c3]">
+                            <h4 class="text-lg mt-3 mb-2 text-white">
+                                <span x-text="getInitialMessage()"></span>
+                            </h4>
+                        </div>
+                    </template>
+                    <div class="flex items-center justify-center w-full bg-[#1979c3]">
+                        <div class="hidden lg:block lg:relative lg:min-h-0 lg:px-8 lg:w-auto lg:pt-0">
+                            <template x-if="itemsCount">
+                                <div>
+                                    <div>
+                                        <template x-if="getPercentage() < 100">
+                                            <h4 class="text-lg mt-3 mb-2 text-white">
+                                                <span x-text="getItemsTotalAmount()"></span>
+                                            </h4>
+                                        </template>
+                                    </div>
+                                    <div>
+                                        <template x-if="getPercentage() > 100">
+                                            <h4 class="text-lg mt-3 mb-2 text-white achieved-message">
+                                                <span x-text="getAchievedMessage()"></span>
+                                            </h4>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    <?php endif; ?>
+<?php endif; ?>
